@@ -96,12 +96,30 @@ h1,h2,h3{font-family:'Noto Serif TC',serif;color:var(--violet-deep);margin:0;}
 .quiz-panel.active{display:block;}
 .quiz-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 24px;}
 .quiz-intro{font-size:12.5px;color:var(--ink-soft);margin:0 0 20px;text-align:center;}
-.tcm-groups{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin-bottom:22px;}
-.tcm-group{background:var(--surface-soft);border-radius:14px;padding:14px 14px 6px;}
-.tcm-group-label{font-size:11px;font-weight:700;color:var(--violet);letter-spacing:.04em;margin-bottom:8px;}
-.check-line{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;}
-.check-line input{margin-top:3px;width:15px;height:15px;accent-color:var(--violet);flex:none;}
-.check-line label{font-size:12.5px;color:var(--ink);cursor:pointer;}
+.quiz-start-btn{display:block;margin:0 auto;padding:13px 32px;border-radius:999px;border:none;background:var(--violet);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;box-shadow:0 10px 22px -10px rgba(140,108,170,.6);}
+.tcm-meta-note{text-align:center;font-size:11px;color:var(--ink-soft);margin-top:12px;}
+.tcm-progress-bar{height:6px;border-radius:999px;background:var(--surface-soft);overflow:hidden;margin-bottom:8px;}
+.tcm-progress-fill{height:100%;background:var(--violet);border-radius:999px;transition:width .25s ease;width:0%;}
+.tcm-progress-text{text-align:center;font-size:11px;color:var(--ink-soft);font-variant-numeric:tabular-nums;margin-bottom:18px;}
+.tcm-section-label{text-align:center;font-size:11px;font-weight:700;color:var(--blush-deep);letter-spacing:.1em;margin-bottom:8px;}
+.tcm-question{text-align:center;font-family:'Noto Serif TC',serif;font-weight:600;font-size:16px;color:var(--ink);margin:0 auto 22px;max-width:480px;text-wrap:balance;}
+.tcm-answers{display:grid;gap:8px;max-width:420px;margin:0 auto;}
+.tcm-answer-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left;}
+.tcm-answer-btn .a-sub{font-size:10.5px;color:var(--ink-soft);font-weight:500;}
+.tcm-answer-btn:hover{border-color:var(--violet);background:var(--violet-pale);}
+.tcm-answer-btn.selected{border-color:var(--violet);background:var(--violet);color:#fff;}
+.tcm-answer-btn.selected .a-sub{color:rgba(255,255,255,.8);}
+.tcm-nav{display:flex;justify-content:center;margin-top:18px;}
+.tcm-back-btn{border:none;background:none;color:var(--ink-soft);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:6px 10px;}
+.tcm-back-btn:disabled{visibility:hidden;}
+.tcm-score-table{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px;display:grid;gap:6px;}
+.tcm-score-row{display:flex;align-items:center;gap:10px;font-size:12px;}
+.tcm-score-row .s-name{width:64px;flex:none;color:var(--ink);font-weight:600;}
+.tcm-score-row .s-bar-wrap{flex:1;height:8px;border-radius:999px;background:var(--surface);overflow:hidden;}
+.tcm-score-row .s-bar{height:100%;border-radius:999px;background:var(--violet);}
+.tcm-score-row.is-hit .s-bar{background:var(--blush-deep);}
+.tcm-score-row .s-val{width:38px;flex:none;text-align:right;color:var(--ink-soft);font-variant-numeric:tabular-nums;}
+.tcm-retake-btn{display:block;margin:16px auto 0;padding:9px 20px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--violet-deep);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;}
 
 .oil-q{border-bottom:1px dashed var(--line);padding-bottom:18px;margin-bottom:18px;}
 .oil-q:last-of-type{border-bottom:none;margin-bottom:0;padding-bottom:0;}
@@ -275,10 +293,23 @@ footer .note{max-width:480px;margin:0 auto 10px;line-height:1.7;}
     <!-- TCM quiz -->
     <div class="quiz-panel active" id="panel-tcm">
       <div class="quiz-card">
-        <p class="quiz-intro">把符合你最近狀態的敘述都勾起來，勾完按下方按鈕看結果（可複選）。</p>
-        <div class="tcm-groups" id="tcmGroups"></div>
-        <button class="quiz-submit" id="tcmSubmit">看我的體質類型</button>
-        <div class="quiz-msg" id="tcmMsg"></div>
+        <div id="tcmIntro">
+          <p class="quiz-intro">採用中華中醫藥學會公告的「中醫體質分類與判定」標準量表，共 67 題。請依照近一個月的真實體驗回答，點選答案就會自動跳下一題，大約需要 8～10 分鐘。</p>
+          <button class="quiz-start-btn" id="tcmStartBtn">開始測試</button>
+          <p class="tcm-meta-note">測驗結果僅供自我覺察參考，不能取代專業醫療診斷。</p>
+        </div>
+
+        <div id="tcmQuizArea" style="display:none;">
+          <div class="tcm-progress-bar"><div class="tcm-progress-fill" id="tcmProgressFill"></div></div>
+          <div class="tcm-progress-text" id="tcmProgressText"></div>
+          <div class="tcm-section-label" id="tcmSectionLabel"></div>
+          <div class="tcm-question" id="tcmQuestionText"></div>
+          <div class="tcm-answers" id="tcmAnswers"></div>
+          <div class="tcm-nav">
+            <button class="tcm-back-btn" id="tcmBackBtn">← 上一題</button>
+          </div>
+        </div>
+
         <div class="result-box" id="tcmResult"></div>
       </div>
     </div>
@@ -417,75 +448,272 @@ footer .note{max-width:480px;margin:0 auto 10px;line-height:1.7;}
     });
   });
 
-  // ====== TCM 九型體質測驗 ======
-  const tcmTypes = [
-    { key:"balance", name:"平和質", desc:"身心狀態算是穩定平衡的一種，請繼續保持這份從容。",
-      suggestion:"推薦精油：甜橙、真正薰衣草——維持這份平衡感；也歡迎透過催眠，深化對自己的覺察。",
-      statements:["精神體力都不錯，很少生病","睡得穩、吃得下，情緒也算平穩","換季或天氣變化，身體適應得很快"] },
-    { key:"qixu", name:"氣虛質", desc:"你的能量存摺常常見底，需要多一點溫和的補給，而不是硬撐。",
-      suggestion:"推薦精油：甜橙、生薑、乳香——溫和補氣；催眠療程能陪你練習不勉強自己的休息。",
-      statements:["很容易覺得累，說話有點有氣無力","稍微活動一下就流很多汗","感冒或小病總是特別容易找上我"] },
-    { key:"yangxu", name:"陽虛質", desc:"身體的暖爐火力有點不足，容易畏寒怕冷。",
+  // ====== TCM 中醫體質分類與判定（中華中醫藥學會標準量表，共67題） ======
+  // 每一節為一種體質；reverse:true 代表逆向計分題（1↔5，2↔4，3不變）
+  const tcmSections = [
+    { key:"yangxu", name:"陽虛質",
+      desc:"身體的暖爐火力有點不足，容易畏寒怕冷。",
       suggestion:"推薦精油：肉桂、生薑、甜橙——溫暖身心；搭配催眠放鬆練習，幫助神經系統從「防備」切回「安心」。",
-      statements:["手腳常常冰冰冷冷，很怕吹到冷氣","比別人更怕冷、更怕吃生冷食物","精神容易疲軟，提不起勁"] },
-    { key:"yinxu", name:"陰虛質", desc:"身體裡的水分和滋潤感不太夠，容易乾燥、燥熱、睡不安穩。",
+      items:[
+        {t:"您手腳發涼嗎？"},
+        {t:"您胃脘部、背部或腰膝部怕冷嗎？"},
+        {t:"您感到怕冷、衣服比別人穿得多嗎？"},
+        {t:"您比一般人耐不了寒冷（冬天的寒冷，夏天的冷空調、電扇等）嗎？"},
+        {t:"您比別人容易患感冒嗎？"},
+        {t:"您吃（喝）涼的東西會感到不舒服，或者怕吃（喝）涼東西嗎？"},
+        {t:"您受涼或吃（喝）涼的東西後，容易腹瀉（拉肚子）嗎？"}
+      ] },
+    { key:"yinxu", name:"陰虛質",
+      desc:"身體裡的水分和滋潤感不太夠，容易乾燥、燥熱、睡不安穩。",
       suggestion:"推薦精油：真正薰衣草、玫瑰、檀香——滋潤鎮靜；催眠深度放鬆練習能改善淺眠問題。",
-      statements:["容易口乾舌燥，晚上睡不安穩","常覺得手心腳心莫名發熱","情緒有點急躁，容易上火"] },
-    { key:"tanshi", name:"痰濕質", desc:"身體裡累積了一些代謝不掉的濕氣，容易感覺沉重疲懶。",
+      items:[
+        {t:"您感到手腳心發熱嗎？"},
+        {t:"您感覺身體、臉上發熱嗎？"},
+        {t:"您皮膚或口唇乾嗎？"},
+        {t:"您口唇的顏色比一般人紅嗎？"},
+        {t:"您容易便秘或大便乾燥嗎？"},
+        {t:"您面部兩顴潮紅或偏紅嗎？"},
+        {t:"您感到眼睛乾澀嗎？"},
+        {t:"您活動量稍大就容易出虛汗嗎？"}
+      ] },
+    { key:"qixu", name:"氣虛質",
+      desc:"你的能量存摺常常見底，需要多一點溫和的補給，而不是硬撐。",
+      suggestion:"推薦精油：甜橙、生薑、乳香——溫和補氣；催眠療程能陪你練習不勉強自己的休息。",
+      items:[
+        {t:"您容易疲乏嗎？"},
+        {t:"您容易氣短（呼吸短促，接不上氣）嗎？"},
+        {t:"您容易心慌嗎？"},
+        {t:"您容易頭暈或站起時暈眩嗎？"},
+        {t:"您比別人容易患感冒嗎？"},
+        {t:"您喜歡安靜、懶得說話嗎？"},
+        {t:"您說話聲音無力嗎？"},
+        {t:"您活動量稍大就容易出虛汗嗎？"}
+      ] },
+    { key:"tanshi", name:"痰濕質",
+      desc:"身體裡累積了一些代謝不掉的濕氣，容易感覺沉重疲懶。",
       suggestion:"推薦精油：葡萄柚、絲柏、迷迭香——提振代謝感；搭配催眠找回行動的動力。",
-      statements:["身體常覺得沉重，像裹了一層濕棉被","容易水腫，早上起來臉或腿腫腫的","感覺懶懶的，不太想動"] },
-    { key:"shire", name:"濕熱質", desc:"體內像悶著一把小火，容易長痘、心浮氣躁。",
+      items:[
+        {t:"您感到胸悶或腹部脹滿嗎？"},
+        {t:"您感到身體不輕鬆或不爽快嗎？"},
+        {t:"您腹部肥滿鬆軟嗎？"},
+        {t:"您有額部油脂分泌多的現象嗎？"},
+        {t:"您上眼瞼比別人腫（輕微隆起的現象）嗎？"},
+        {t:"您嘴裡有黏黏的感覺嗎？"},
+        {t:"您平時痰多，特別是咽喉部總感到有痰堵著嗎？"},
+        {t:"您舌苔厚膩或有舌苔厚厚的感覺嗎？"}
+      ] },
+    { key:"shire", name:"濕熱質",
+      desc:"體內像悶著一把小火，容易長痘、心浮氣躁。",
       suggestion:"推薦精油：茶樹、薄荷、佛手柑——清爽降火；催眠情緒紓壓練習也很適合你。",
-      statements:["臉部容易出油、長痘痘","常覺得口苦口乾，嘴巴有異味","情緒容易煩躁，脾氣比較急"] },
-    { key:"xueyu", name:"血瘀質", desc:"氣血循環有點卡住，身體某些地方總是悶悶痛痛的。",
+      items:[
+        {t:"您面部或鼻部有油膩感，或者油亮發光嗎？"},
+        {t:"您容易生痤瘡或瘡癤嗎？"},
+        {t:"您感到口苦或嘴裡有異味嗎？"},
+        {t:"您大便黏滯不爽、有解不盡的感覺嗎？"},
+        {t:"您小便時尿道有發熱感、尿色濃（深）嗎？"},
+        {t:"您帶下色黃（白帶顏色發黃）嗎？（限女性回答）"},
+        {t:"您的陰囊部位潮濕嗎？（限男性回答）"}
+      ] },
+    { key:"xueyu", name:"血瘀質",
+      desc:"氣血循環有點卡住，身體某些地方總是悶悶痛痛的。",
       suggestion:"推薦精油：玫瑰、絲柏、乳香——促進循環感；催眠身體掃描練習能幫助鬆開緊繃。",
-      statements:["膚色偏暗沉，容易有黑眼圈","身上常莫名其妙出現瘀青","肩頸或身體某處常悶悶地痠痛"] },
-    { key:"qiyu", name:"氣鬱質", desc:"情緒容易堆積在心裡，胸口悶悶的，想很多又說不出口。",
-      suggestion:"推薦精油：佛手柑、真正薰衣草、乳香——舒緩情緒；這正是催眠療程最能陪伴你的地方。",
-      statements:["情緒容易敏感，常常想很多","胸口有點悶，常不自覺嘆氣","容易緊張焦慮，難以真正放鬆"] },
-    { key:"tebing", name:"特稟質", desc:"身體對外界特別敏感，容易有過敏反應。",
+      items:[
+        {t:"您的皮膚在不知不覺中會出現青紫瘀斑（皮下出血）嗎？"},
+        {t:"您兩顴部有細微紅絲嗎？"},
+        {t:"您身體上有哪裡疼痛嗎？"},
+        {t:"您面色晦黯或容易出現褐斑嗎？"},
+        {t:"您容易有黑眼圈嗎？"},
+        {t:"您容易忘事（健忘）嗎？"},
+        {t:"您口唇顏色偏黯嗎？"}
+      ] },
+    { key:"tebing", name:"特稟質",
+      desc:"身體對外界特別敏感，容易有過敏反應。",
       suggestion:"建議使用精油前先小範圍測試；德國洋甘菊溫和不刺激，是不錯的起點。",
-      statements:["容易對特定食物、氣味或花粉過敏","皮膚比較敏感，容易紅癢起疹子","換季或天氣變化時，身體反應特別明顯"] }
+      items:[
+        {t:"您沒有感冒時也會打噴嚏嗎？"},
+        {t:"您沒有感冒時也會鼻塞、流鼻涕嗎？"},
+        {t:"您有因季節變化、溫度變化或異味等原因而咳喘的現象嗎？"},
+        {t:"您容易過敏（對藥物、食物、氣味、花粉，或在季節交替、氣候變化時）嗎？"},
+        {t:"您的皮膚容易起蕁麻疹（風團、風疹塊、風疙瘩）嗎？"},
+        {t:"您因過敏出現過紫癜（紫紅色瘀點、瘀斑）嗎？"},
+        {t:"您的皮膚一抓就紅，並出現抓痕嗎？"}
+      ] },
+    { key:"qiyu", name:"氣鬱質",
+      desc:"情緒容易堆積在心裡，胸口悶悶的，想很多又說不出口。",
+      suggestion:"推薦精油：佛手柑、真正薰衣草、乳香——舒緩情緒；這正是催眠療程最能陪伴你的地方。",
+      items:[
+        {t:"您感到悶悶不樂嗎？"},
+        {t:"您容易精神緊張、焦慮不安嗎？"},
+        {t:"您多愁善感、感情脆弱嗎？"},
+        {t:"您容易感到害怕或受到驚嚇嗎？"},
+        {t:"您脅肋部或乳房脹痛嗎？"},
+        {t:"您無緣無故嘆氣嗎？"},
+        {t:"您咽喉部有異物感，且吐之不出、咽之不下嗎？"}
+      ] },
+    { key:"balance", name:"平和質",
+      desc:"身心狀態算是穩定平衡的一種，請繼續保持這份從容。",
+      suggestion:"推薦精油：甜橙、真正薰衣草——維持這份平衡感；也歡迎透過催眠，深化對自己的覺察。",
+      items:[
+        {t:"您精力充沛嗎？"},
+        {t:"您容易疲乏嗎？", reverse:true},
+        {t:"您說話聲音無力嗎？", reverse:true},
+        {t:"您感到悶悶不樂嗎？", reverse:true},
+        {t:"您比一般人耐受不了寒冷（冬天的寒冷，夏天的冷空調、電扇）嗎？", reverse:true},
+        {t:"您能適應外界自然和社會環境的變化嗎？"},
+        {t:"您容易失眠嗎？", reverse:true},
+        {t:"您容易忘事（健忘）嗎？", reverse:true}
+      ] }
   ];
-
-  const tcmGroupsEl = document.getElementById("tcmGroups");
-  tcmGroupsEl.innerHTML = tcmTypes.map(t => `
-    <div class="tcm-group">
-      <div class="tcm-group-label">${t.name}</div>
-      ${t.statements.map((s,i)=>`
-        <div class="check-line">
-          <input type="checkbox" id="tcm_${t.key}_${i}" data-type="${t.key}">
-          <label for="tcm_${t.key}_${i}">${s}</label>
-        </div>`).join("")}
-    </div>`).join("");
-
-  document.getElementById("tcmSubmit").addEventListener("click", ()=>{
-    const counts = {};
-    tcmTypes.forEach(t => counts[t.key] = 0);
-    document.querySelectorAll('#tcmGroups input[type=checkbox]:checked').forEach(cb=>{
-      counts[cb.getAttribute("data-type")]++;
+  const ANSWER_LABELS = [
+    { label:"沒有", sub:"根本不" },
+    { label:"很少", sub:"有一點" },
+    { label:"有時", sub:"有些" },
+    { label:"經常", sub:"相當" },
+    { label:"總是", sub:"非常" }
+  ];
+  // 展平成一題一題的清單，同時記住屬於哪個體質
+  const tcmQuestions = [];
+  tcmSections.forEach(sec => {
+    sec.items.forEach((item, idx) => {
+      tcmQuestions.push({ sectionKey:sec.key, sectionName:sec.name, text:item.t, reverse:!!item.reverse, indexInSection:idx });
     });
-    const totalChecked = Object.values(counts).reduce((a,b)=>a+b,0);
-    const msg = document.getElementById("tcmMsg");
-    const box = document.getElementById("tcmResult");
-    if(totalChecked === 0){
-      msg.textContent = "至少勾選一項敘述，才能幫你看出體質傾向喔";
-      box.classList.remove("show");
-      return;
-    }
-    msg.textContent = "";
-    let maxCount = Math.max(...Object.values(counts));
-    const top = tcmTypes.filter(t => counts[t.key] === maxCount);
-    box.innerHTML = top.map(t => `
-      <div class="r-eyebrow">你的體質偏向</div>
-      <div class="r-name">${t.name}</div>
-      <div class="r-desc">${t.desc}</div>
-      <div class="r-suggest">${t.suggestion}</div>
-    `).join('<div style="height:14px;"></div>') +
-      `<button class="btn btn-primary" style="margin-top:16px;" data-service="hypnosis">預約催眠陪伴我</button>`;
-    box.classList.add("show");
-    box.querySelector("[data-service]").addEventListener("click", ()=> goToContact("hypnosis"));
   });
+  const tcmTotal = tcmQuestions.length;
+  let tcmAnswers = new Array(tcmTotal).fill(null);
+  let tcmCurrent = 0;
+
+  const tcmIntroEl = document.getElementById("tcmIntro");
+  const tcmQuizAreaEl = document.getElementById("tcmQuizArea");
+  const tcmProgressFillEl = document.getElementById("tcmProgressFill");
+  const tcmProgressTextEl = document.getElementById("tcmProgressText");
+  const tcmSectionLabelEl = document.getElementById("tcmSectionLabel");
+  const tcmQuestionTextEl = document.getElementById("tcmQuestionText");
+  const tcmAnswersEl = document.getElementById("tcmAnswers");
+  const tcmBackBtnEl = document.getElementById("tcmBackBtn");
+  const tcmResultEl = document.getElementById("tcmResult");
+
+  document.getElementById("tcmStartBtn").addEventListener("click", ()=>{
+    tcmIntroEl.style.display = "none";
+    tcmResultEl.classList.remove("show");
+    tcmQuizAreaEl.style.display = "block";
+    tcmCurrent = 0;
+    tcmAnswers = new Array(tcmTotal).fill(null);
+    renderTcmQuestion();
+  });
+
+  function renderTcmQuestion(){
+    const q = tcmQuestions[tcmCurrent];
+    tcmProgressFillEl.style.width = Math.round((tcmCurrent / tcmTotal) * 100) + "%";
+    tcmProgressTextEl.textContent = `第 ${tcmCurrent + 1} 題，共 ${tcmTotal} 題`;
+    tcmSectionLabelEl.textContent = q.sectionName;
+    tcmQuestionTextEl.textContent = `（${q.indexInSection + 1}）${q.text}`;
+    const selected = tcmAnswers[tcmCurrent];
+    tcmAnswersEl.innerHTML = ANSWER_LABELS.map((a, i) => `
+      <button type="button" class="tcm-answer-btn${selected === i + 1 ? " selected" : ""}" data-val="${i + 1}">
+        <span>${a.label}</span><span class="a-sub">${a.sub}</span>
+      </button>`).join("");
+    tcmAnswersEl.querySelectorAll(".tcm-answer-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        tcmAnswers[tcmCurrent] = Number(btn.getAttribute("data-val"));
+        if(tcmCurrent < tcmTotal - 1){
+          tcmCurrent++;
+          renderTcmQuestion();
+        } else {
+          finishTcmQuiz();
+        }
+      });
+    });
+    tcmBackBtnEl.disabled = tcmCurrent === 0;
+  }
+  tcmBackBtnEl.addEventListener("click", ()=>{
+    if(tcmCurrent > 0){ tcmCurrent--; renderTcmQuestion(); }
+  });
+
+  function finishTcmQuiz(){
+    tcmQuizAreaEl.style.display = "none";
+
+    // 依標準公式計算每種體質的原始分與轉化分
+    const results = tcmSections.map(sec => {
+      const secQuestions = tcmQuestions.filter(q => q.sectionKey === sec.key);
+      const raw = secQuestions.reduce((sum, q, i) => {
+        const globalIndex = tcmQuestions.indexOf(q);
+        const val = tcmAnswers[globalIndex] || 1;
+        return sum + (q.reverse ? (6 - val) : val);
+      }, 0);
+      const n = secQuestions.length;
+      const converted = ((raw - n) / (n * 4)) * 100;
+      return { ...sec, raw, n, converted };
+    });
+    const balance = results.find(r => r.key === "balance");
+    const others = results.filter(r => r.key !== "balance");
+
+    // 判定標準（中華中醫藥學會標準）
+    others.forEach(r => {
+      if(r.converted >= 40) r.status = "是";
+      else if(r.converted >= 30) r.status = "傾向是";
+      else r.status = "否";
+    });
+    if(balance.converted >= 60 && others.every(r => r.converted < 30)) balance.status = "是";
+    else if(balance.converted >= 60 && others.every(r => r.converted < 40)) balance.status = "基本是";
+    else balance.status = "否";
+
+    const hits = others.filter(r => r.status === "是").sort((a,b)=>b.converted-a.converted);
+    const leanings = others.filter(r => r.status === "傾向是").sort((a,b)=>b.converted-a.converted);
+
+    // 組成判定結果文字
+    let headline, headDesc, headSuggest, noteHtml = "";
+    if(balance.status !== "否"){
+      headline = "平和質" + (balance.status === "基本是" ? "（基本是）" : "");
+      headDesc = balance.desc;
+      headSuggest = balance.suggestion;
+      const extra = [...hits, ...leanings];
+      if(extra.length > 0){
+        noteHtml = `<div class="r-suggest" style="margin-top:8px;">同時你也有一點${extra.map(r=>r.name).join("、")}的傾向，可以留意一下這方面的照顧。</div>`;
+      }
+    } else if(hits.length > 0){
+      const main = hits[0];
+      headline = main.name;
+      headDesc = main.desc;
+      headSuggest = main.suggestion;
+      const extra = [...hits.slice(1), ...leanings];
+      if(extra.length > 0){
+        noteHtml = `<div class="r-suggest" style="margin-top:8px;">你同時也有${extra.map(r=>r.name).join("、")}的特徵，體質偏頗常常不只一種，別擔心。</div>`;
+      }
+    } else if(leanings.length > 0){
+      const main = leanings[0];
+      headline = main.name + "（傾向）";
+      headDesc = main.desc;
+      headSuggest = main.suggestion;
+    } else {
+      headline = "體質特徵不典型";
+      headDesc = "各項分數都不算突出，代表你的體質不集中偏向某一種類型，可以參考下方各類型的分數當作生活調整的參考。";
+      headSuggest = "如果想更深入了解自己的身心狀態，歡迎預約催眠或精油調配諮詢聊聊。";
+    }
+
+    const scoreRows = [balance, ...others].sort((a,b)=>b.converted-a.converted).map(r => `
+      <div class="tcm-score-row${r.status && r.status !== "否" ? " is-hit" : ""}">
+        <span class="s-name">${r.name}</span>
+        <span class="s-bar-wrap"><span class="s-bar" style="width:${Math.max(0, Math.min(100, r.converted)).toFixed(0)}%"></span></span>
+        <span class="s-val">${r.converted.toFixed(0)}分</span>
+      </div>`).join("");
+
+    tcmResultEl.innerHTML = `
+      <div class="r-eyebrow">你的體質判定結果</div>
+      <div class="r-name">${headline}</div>
+      <div class="r-desc">${headDesc}</div>
+      <div class="r-suggest">${headSuggest}</div>
+      ${noteHtml}
+      <div class="tcm-score-table">${scoreRows}</div>
+      <button class="btn btn-primary" style="margin-top:16px;" data-service="hypnosis">預約催眠陪伴我</button>
+      <button class="tcm-retake-btn" id="tcmRetakeBtn">重新測一次</button>
+    `;
+    tcmResultEl.classList.add("show");
+    tcmResultEl.querySelector("[data-service]").addEventListener("click", ()=> goToContact("hypnosis"));
+    document.getElementById("tcmRetakeBtn").addEventListener("click", ()=>{
+      tcmResultEl.classList.remove("show");
+      tcmIntroEl.style.display = "block";
+    });
+  }
 
   // ====== 精油屬性測驗 ======
   const oilTypes = {
