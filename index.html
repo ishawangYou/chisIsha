@@ -101,17 +101,20 @@ h1,h2,h3{font-family:'Noto Serif TC',serif;color:var(--violet-deep);margin:0;}
 .tcm-progress-bar{height:6px;border-radius:999px;background:var(--surface-soft);overflow:hidden;margin-bottom:8px;}
 .tcm-progress-fill{height:100%;background:var(--violet);border-radius:999px;transition:width .25s ease;width:0%;}
 .tcm-progress-text{text-align:center;font-size:11px;color:var(--ink-soft);font-variant-numeric:tabular-nums;margin-bottom:18px;}
-.tcm-section-label{text-align:center;font-size:11px;font-weight:700;color:var(--blush-deep);letter-spacing:.1em;margin-bottom:8px;}
-.tcm-question{text-align:center;font-family:'Noto Serif TC',serif;font-weight:600;font-size:16px;color:var(--ink);margin:0 auto 22px;max-width:480px;text-wrap:balance;}
-.tcm-answers{display:grid;gap:8px;max-width:420px;margin:0 auto;}
-.tcm-answer-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left;}
-.tcm-answer-btn .a-sub{font-size:10.5px;color:var(--ink-soft);font-weight:500;}
-.tcm-answer-btn:hover{border-color:var(--violet);background:var(--violet-pale);}
-.tcm-answer-btn.selected{border-color:var(--violet);background:var(--violet);color:#fff;}
-.tcm-answer-btn.selected .a-sub{color:rgba(255,255,255,.8);}
-.tcm-nav{display:flex;justify-content:center;margin-top:18px;}
-.tcm-back-btn{border:none;background:none;color:var(--ink-soft);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:6px 10px;}
+.tcm-scale-legend{text-align:center;font-size:11.5px;color:var(--ink-soft);margin:0 0 22px;line-height:1.7;}
+.tcm-sec-item{padding:16px 0;border-bottom:1px dashed var(--line);}
+.tcm-sec-item:first-child{padding-top:0;}
+.tcm-sec-item:last-child{border-bottom:none;}
+.tcm-sec-item-title{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:10px;text-wrap:balance;}
+.tcm-sec-opts{display:flex;gap:6px;flex-wrap:wrap;}
+.tcm-sec-opt{flex:1;min-width:58px;text-align:center;padding:9px 4px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:11.5px;font-weight:600;color:var(--ink-soft);cursor:pointer;font-family:inherit;}
+.tcm-sec-opt:hover{border-color:var(--violet);color:var(--violet-deep);}
+.tcm-sec-opt.selected{background:var(--violet);color:#fff;border-color:var(--violet);}
+.tcm-nav{display:flex;justify-content:space-between;align-items:center;margin-top:22px;gap:10px;}
+.tcm-back-btn{border:none;background:none;color:var(--ink-soft);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:6px 10px;flex:none;}
 .tcm-back-btn:disabled{visibility:hidden;}
+.tcm-next-btn{padding:10px 24px;border-radius:999px;border:none;background:var(--violet);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;flex:none;}
+.tcm-next-btn:disabled{background:var(--surface-soft);color:var(--ink-soft);cursor:not-allowed;}
 .tcm-score-table{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px;display:grid;gap:6px;}
 .tcm-score-row{display:flex;align-items:center;gap:10px;font-size:12px;}
 .tcm-score-row .s-name{width:64px;flex:none;color:var(--ink);font-weight:600;}
@@ -302,11 +305,11 @@ footer .note{max-width:480px;margin:0 auto 10px;line-height:1.7;}
         <div id="tcmQuizArea" style="display:none;">
           <div class="tcm-progress-bar"><div class="tcm-progress-fill" id="tcmProgressFill"></div></div>
           <div class="tcm-progress-text" id="tcmProgressText"></div>
-          <div class="tcm-section-label" id="tcmSectionLabel"></div>
-          <div class="tcm-question" id="tcmQuestionText"></div>
-          <div class="tcm-answers" id="tcmAnswers"></div>
+          <p class="tcm-scale-legend">請依照近一個月的真實感受，針對以下每一題選擇最符合的程度：沒有（根本不）／很少（有一點）／有時（有些）／經常（相當）／總是（非常）</p>
+          <div id="tcmSectionItems"></div>
           <div class="tcm-nav">
-            <button class="tcm-back-btn" id="tcmBackBtn">← 上一題</button>
+            <button class="tcm-back-btn" id="tcmBackBtn">← 上一部分</button>
+            <button class="tcm-next-btn" id="tcmNextBtn">下一部分</button>
           </div>
         </div>
 
@@ -564,83 +567,107 @@ footer .note{max-width:480px;margin:0 auto 10px;line-height:1.7;}
         {t:"您容易忘事（健忘）嗎？", reverse:true}
       ] }
   ];
-  const ANSWER_LABELS = [
-    { label:"沒有", sub:"根本不" },
-    { label:"很少", sub:"有一點" },
-    { label:"有時", sub:"有些" },
-    { label:"經常", sub:"相當" },
-    { label:"總是", sub:"非常" }
-  ];
-  // 展平成一題一題的清單，同時記住屬於哪個體質
-  const tcmQuestions = [];
-  tcmSections.forEach(sec => {
-    sec.items.forEach((item, idx) => {
-      tcmQuestions.push({ sectionKey:sec.key, sectionName:sec.name, text:item.t, reverse:!!item.reverse, indexInSection:idx });
-    });
-  });
-  const tcmTotal = tcmQuestions.length;
-  let tcmAnswers = new Array(tcmTotal).fill(null);
-  let tcmCurrent = 0;
+  const ANSWER_LABELS = ["沒有", "很少", "有時", "經常", "總是"];
+  const tcmSectionCount = tcmSections.length;
+  const tcmTotalItems = tcmSections.reduce((s, sec) => s + sec.items.length, 0);
+  // 每一種體質各自一份答案陣列，answers[secIndex][itemIndex] = 1~5 或 null
+  let tcmAnswers = tcmSections.map(sec => new Array(sec.items.length).fill(null));
+  let tcmSecIndex = 0;
 
   const tcmIntroEl = document.getElementById("tcmIntro");
   const tcmQuizAreaEl = document.getElementById("tcmQuizArea");
   const tcmProgressFillEl = document.getElementById("tcmProgressFill");
   const tcmProgressTextEl = document.getElementById("tcmProgressText");
-  const tcmSectionLabelEl = document.getElementById("tcmSectionLabel");
-  const tcmQuestionTextEl = document.getElementById("tcmQuestionText");
-  const tcmAnswersEl = document.getElementById("tcmAnswers");
+  const tcmSectionItemsEl = document.getElementById("tcmSectionItems");
   const tcmBackBtnEl = document.getElementById("tcmBackBtn");
+  const tcmNextBtnEl = document.getElementById("tcmNextBtn");
   const tcmResultEl = document.getElementById("tcmResult");
 
   document.getElementById("tcmStartBtn").addEventListener("click", ()=>{
     tcmIntroEl.style.display = "none";
     tcmResultEl.classList.remove("show");
     tcmQuizAreaEl.style.display = "block";
-    tcmCurrent = 0;
-    tcmAnswers = new Array(tcmTotal).fill(null);
-    renderTcmQuestion();
+    tcmSecIndex = 0;
+    tcmAnswers = tcmSections.map(sec => new Array(sec.items.length).fill(null));
+    renderTcmSection();
   });
 
-  function renderTcmQuestion(){
-    const q = tcmQuestions[tcmCurrent];
-    tcmProgressFillEl.style.width = Math.round((tcmCurrent / tcmTotal) * 100) + "%";
-    tcmProgressTextEl.textContent = `第 ${tcmCurrent + 1} 題，共 ${tcmTotal} 題`;
-    tcmSectionLabelEl.textContent = q.sectionName;
-    tcmQuestionTextEl.textContent = `（${q.indexInSection + 1}）${q.text}`;
-    const selected = tcmAnswers[tcmCurrent];
-    tcmAnswersEl.innerHTML = ANSWER_LABELS.map((a, i) => `
-      <button type="button" class="tcm-answer-btn${selected === i + 1 ? " selected" : ""}" data-val="${i + 1}">
-        <span>${a.label}</span><span class="a-sub">${a.sub}</span>
-      </button>`).join("");
-    tcmAnswersEl.querySelectorAll(".tcm-answer-btn").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        tcmAnswers[tcmCurrent] = Number(btn.getAttribute("data-val"));
-        if(tcmCurrent < tcmTotal - 1){
-          tcmCurrent++;
-          renderTcmQuestion();
-        } else {
-          finishTcmQuiz();
-        }
+  // 這一部分之前（不含）已完成的題數，用來算整體進度
+  function itemsBeforeSection(idx){
+    let n = 0;
+    for(let i=0;i<idx;i++) n += tcmSections[i].items.length;
+    return n;
+  }
+
+  function renderTcmSection(){
+    const sec = tcmSections[tcmSecIndex];
+    const doneBefore = itemsBeforeSection(tcmSecIndex);
+    const answeredHere = tcmAnswers[tcmSecIndex].filter(v => v !== null).length;
+    tcmProgressFillEl.style.width = Math.round(((doneBefore + answeredHere) / tcmTotalItems) * 100) + "%";
+    tcmProgressTextEl.textContent = `第 ${tcmSecIndex + 1} 部分，共 ${tcmSectionCount} 部分`;
+
+    tcmSectionItemsEl.innerHTML = sec.items.map((item, i) => `
+      <div class="tcm-sec-item">
+        <div class="tcm-sec-item-title">（${i + 1}）${item.t}</div>
+        <div class="tcm-sec-opts" data-item="${i}">
+          ${ANSWER_LABELS.map((label, li) => `
+            <button type="button" class="tcm-sec-opt${tcmAnswers[tcmSecIndex][i] === li + 1 ? " selected" : ""}" data-val="${li + 1}">${label}</button>
+          `).join("")}
+        </div>
+      </div>`).join("");
+
+    tcmSectionItemsEl.querySelectorAll(".tcm-sec-opts").forEach(wrap=>{
+      const itemIdx = Number(wrap.getAttribute("data-item"));
+      wrap.querySelectorAll(".tcm-sec-opt").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          tcmAnswers[tcmSecIndex][itemIdx] = Number(btn.getAttribute("data-val"));
+          wrap.querySelectorAll(".tcm-sec-opt").forEach(b => b.classList.toggle("selected", b === btn));
+          updateTcmNextState();
+          const doneBefore2 = itemsBeforeSection(tcmSecIndex);
+          const answeredHere2 = tcmAnswers[tcmSecIndex].filter(v => v !== null).length;
+          tcmProgressFillEl.style.width = Math.round(((doneBefore2 + answeredHere2) / tcmTotalItems) * 100) + "%";
+        });
       });
     });
-    tcmBackBtnEl.disabled = tcmCurrent === 0;
+
+    tcmBackBtnEl.disabled = tcmSecIndex === 0;
+    updateTcmNextState();
   }
+
+  function updateTcmNextState(){
+    const remaining = tcmAnswers[tcmSecIndex].filter(v => v === null).length;
+    tcmNextBtnEl.disabled = remaining > 0;
+    if(remaining > 0){
+      tcmNextBtnEl.textContent = `還有 ${remaining} 題未作答`;
+    } else {
+      tcmNextBtnEl.textContent = tcmSecIndex < tcmSectionCount - 1 ? "下一部分" : "看我的體質判定結果";
+    }
+  }
+
   tcmBackBtnEl.addEventListener("click", ()=>{
-    if(tcmCurrent > 0){ tcmCurrent--; renderTcmQuestion(); }
+    if(tcmSecIndex > 0){ tcmSecIndex--; renderTcmSection(); }
+  });
+  tcmNextBtnEl.addEventListener("click", ()=>{
+    if(tcmAnswers[tcmSecIndex].some(v => v === null)) return;
+    if(tcmSecIndex < tcmSectionCount - 1){
+      tcmSecIndex++;
+      renderTcmSection();
+      tcmQuizAreaEl.scrollIntoView({behavior:"smooth", block:"start"});
+    } else {
+      finishTcmQuiz();
+    }
   });
 
   function finishTcmQuiz(){
     tcmQuizAreaEl.style.display = "none";
 
     // 依標準公式計算每種體質的原始分與轉化分
-    const results = tcmSections.map(sec => {
-      const secQuestions = tcmQuestions.filter(q => q.sectionKey === sec.key);
-      const raw = secQuestions.reduce((sum, q, i) => {
-        const globalIndex = tcmQuestions.indexOf(q);
-        const val = tcmAnswers[globalIndex] || 1;
-        return sum + (q.reverse ? (6 - val) : val);
+    const results = tcmSections.map((sec, secIdx) => {
+      const raw = sec.items.reduce((sum, item, i) => {
+        const val = tcmAnswers[secIdx][i] || 1;
+        return sum + (item.reverse ? (6 - val) : val);
       }, 0);
-      const n = secQuestions.length;
+      const n = sec.items.length;
       const converted = ((raw - n) / (n * 4)) * 100;
       return { ...sec, raw, n, converted };
     });
